@@ -1,7 +1,8 @@
 package com.demo.telegram_bot.myTelegramBot;
 
+import com.demo.telegram_bot.model.User;
 import com.demo.telegram_bot.repository.*;
-import lombok.*;
+import java.util.*;
 import org.springframework.beans.factory.annotation.*;
 import org.springframework.stereotype.*;
 import org.telegram.telegrambots.bots.*;
@@ -10,65 +11,57 @@ import org.telegram.telegrambots.meta.api.objects.*;
 import org.telegram.telegrambots.meta.exceptions.*;
 
 @Component
-@NoArgsConstructor
-@AllArgsConstructor
 public class MyTelegramBot extends TelegramLongPollingBot {
-    private String botToken;
-    private String botUsername;
-    @Autowired
-    private UserRepository userRepository;
+  @Autowired
+  private UserRepository userRepository;
+  @Value("${bot.token}")
+  private String botToken;
 
-    @Override
-    public String getBotUsername() {
-        return botUsername;
-    }
+  @Value("${bot.username}")
+  private String botUsername;
 
-    @Override
-    public String getBotToken() {
-        return botToken;
-    }
+  @Override
+  public void onUpdateReceived(Update update) {
+    if (update.hasMessage() && update.getMessage().hasText()) {
+      String messageText = update.getMessage().getText();
+      Long chatId = update.getMessage().getChatId();
 
-    @Override
-    public void onUpdateReceived(Update update) {
-        if (update.hasMessage() && update.getMessage().hasText()) {
-            String messageText = update.getMessage().getText();
-            long chatId = update.getMessage().getChatId();
-
-            User user = userRepository.findById(chatId).orElseGet(() -> {
-                User newUser = new User();
-                newUser.setId(chatId);
-                newUser.setFirstName(update.getMessage().getChat().getFirstName());
-                newUser.setLastName(update.getMessage().getChat().getLastName());
-                newUser.setUserName(update.getMessage().getChat().getUserName());
-                return userRepository.save(newUser);
-            });
-
-            handleMessage(user, messageText, chatId);
+      Optional<User> existingUser = userRepository.findByChatId(chatId);
+      if (messageText.startsWith("/start")) {
+        if (existingUser.isEmpty()) {
+          User user = new User();
+          user.setChatId(chatId);
+          user.setName(update.getMessage().getFrom().getFirstName());
+          userRepository.save(user);
+          sendTextMessage(chatId, "Добро пожаловать!");
+        } else {
+          sendTextMessage(chatId, "Вы уже зарегистрированы!");
         }
+      } else {
+        sendTextMessage(chatId, "Вы сказали: " + messageText);
+      }
     }
+  }
 
-    private void handleMessage(User user, String text, long chatId) {
-        SendMessage message = new SendMessage();
-        message.setChatId(chatId);
-
-        switch (text) {
-            case "/start":
-                message.setText("время оформить вкид");
-                userRepository.save(user);
-                break;
-            case "/help":
-                message.setText("Это помощь по боту...");
-                break;
-            default:
-                message.setText("Я не понимаю эту команду.");
-        }
-
-        try {
-            execute(message);
-        } catch (TelegramApiException e) {
-            e.printStackTrace();
-        }
+  private void sendTextMessage(Long chatId, String text) {
+    SendMessage message = SendMessage.builder()
+        .chatId(chatId.toString())
+        .text(text)
+        .build();
+    try {
+      execute(message);
+    } catch (TelegramApiException e) {
+      e.printStackTrace();
     }
+  }
 
+  @Override
+  public String getBotUsername() {
+    return botUsername;
+  }
 
+  @Override
+  public String getBotToken() {
+    return botToken;
+  }
 }

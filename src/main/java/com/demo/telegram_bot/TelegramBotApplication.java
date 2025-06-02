@@ -1,4 +1,4 @@
-package com.demo.telegram_bot.serviceImpl;
+package com.demo.telegram_bot;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
