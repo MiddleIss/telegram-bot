@@ -1,10 +1,11 @@
 package com.demo.telegram_bot.myTelegramBot;
 
-import com.demo.telegram_bot.model.User;
+import com.demo.telegram_bot.model.BotUser;
 import com.demo.telegram_bot.repository.*;
 import java.util.*;
 import org.springframework.beans.factory.annotation.*;
 import org.springframework.stereotype.*;
+import org.springframework.transaction.annotation.*;
 import org.telegram.telegrambots.bots.*;
 import org.telegram.telegrambots.meta.api.methods.send.*;
 import org.telegram.telegrambots.meta.api.objects.*;
@@ -21,19 +22,21 @@ public class MyTelegramBot extends TelegramLongPollingBot {
   private String botUsername;
 
   @Override
+  @Transactional
   public void onUpdateReceived(Update update) {
     if (update.hasMessage() && update.getMessage().hasText()) {
       String messageText = update.getMessage().getText();
       Long chatId = update.getMessage().getChatId();
 
-      Optional<User> existingUser = userRepository.findByChatId(chatId);
+      Optional<BotUser> existingUser = userRepository.findByChatId(chatId);
       if (messageText.startsWith("/start")) {
         if (existingUser.isEmpty()) {
-          User user = new User();
-          user.setChatId(chatId);
-          user.setName(update.getMessage().getFrom().getFirstName());
-          userRepository.save(user);
-          sendTextMessage(chatId, "Добро пожаловать!");
+          //BotUser user = BotUser.builder()
+          //    .chatId(chatId)
+          //    .name(update.getMessage().getFrom().getFirstName())
+          //    .build();
+          //userRepository.save(user);
+          sendTextMessage(chatId, "Добро пожаловать! " + update.getMessage().getFrom().getFirstName());
         } else {
           sendTextMessage(chatId, "Вы уже зарегистрированы!");
         }

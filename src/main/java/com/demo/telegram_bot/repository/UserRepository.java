@@ -7,6 +7,6 @@ import org.springframework.stereotype.Repository;
 
 
 @Repository
-public interface UserRepository extends JpaRepository<User, Long> {
-  Optional<User> findByChatId(Long chatId);
+public interface UserRepository extends JpaRepository<BotUser, Long> {
+  Optional<BotUser> findByChatId(Long chatId);
 }
