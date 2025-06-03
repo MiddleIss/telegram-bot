@@ -6,8 +6,6 @@ import lombok.experimental.*;
 
 @Entity
 @Data
-@AllArgsConstructor
-@NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Table(name = "users")
 @Builder
@@ -21,5 +19,13 @@ public class BotUser {
     private Long chatId;
 
     private String name;
+
+    public BotUser() {
+    }
+
+    public BotUser(Long chatId, String name) {
+        this.chatId = chatId;
+        this.name = name;
+    }
 
 }
